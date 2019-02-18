@@ -9,8 +9,9 @@
 import UIKit
 //import CoreData
 import RealmSwift
+//import SwipeCellKit
 
-class CategoryViewController: UITableViewController {
+class CategoryViewController: SwipeTableViewController {
     
     let realm = try! Realm()
 
@@ -26,6 +27,7 @@ class CategoryViewController: UITableViewController {
         
         
         loadCategories()
+        tableView.rowHeight = 80
     }
     
     //MARK: - Table View Datasource Methods
@@ -36,9 +38,11 @@ class CategoryViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No catagories added yet"
+        
+//        cell.delegate = self
         
         return cell
     }
@@ -61,7 +65,6 @@ class CategoryViewController: UITableViewController {
             destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
-    
     
     
     //MARK: - Data Manipulation Methods
@@ -103,13 +106,28 @@ class CategoryViewController: UITableViewController {
 //
 //    }
     
-        func loadCategories() {
+    func loadCategories() {
+
+        categories = realm.objects(Category.self)
+        
+        tableView.reloadData()
+
+    }
     
-            categories = realm.objects(Category.self)
-            
-            tableView.reloadData()
-    
+    //MARK: - Delete Data From Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let categoryForDeletion = self.categories?[indexPath.row] {
+            do{
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                }
+            } catch {
+                print("Error deleting category: \(error)")
+            }
+
         }
+    }
+    
     
     //MARK: - Add New Item
 
@@ -145,8 +163,6 @@ class CategoryViewController: UITableViewController {
         }
         present(alert, animated: true, completion: nil)
         
-        
     }
-    
     
 }
